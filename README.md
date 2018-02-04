@@ -1,5 +1,5 @@
 # gdrive
 
 ## Usage
-./gdrive -l
-./gdrive -u /path/to/file
+./gdrive -l  
+./gdrive -u /path/to/file  
