@@ -4,8 +4,8 @@
 # author		 : Korby (https://github.com/korby)
 # date 	         : feb. 2018 
 
-client_id=""
-client_secret=""
+client_id="182658329119-08oe7dp5b88ds4k12sdj9m1islqna26o.apps.googleusercontent.com"
+client_secret="gc0YM8gPvXUfd1G-im8kssgo"
 tokens_path="/tmp/"$client_id
 google_url_console="https://console.developers.google.com/apis/"
 google_url_get_code="https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=$client_id"
@@ -23,7 +23,8 @@ if [ ! -f $tokens_path ]; then
 	echo "Need a code to get token, please get it here: "
 	echo $google_url_get_code
     read -p "Type the code:" code
-	json_back=`curl -H 'Content-Type: application/x-www-form-urlencoded' -d 'code=$code&client_id=$client_id&client_secret=$client_secret&redirect_uri=urn:ietf:wg:oauth:2.0:oob&grant_type=authorization_code' $google_url_get_tokens`
+	json_back=`curl -H 'Content-Type: application/x-www-form-urlencoded' -d "code=$code&client_id=$client_id&client_secret=$client_secret&redirect_uri=urn:ietf:wg:oauth:2.0:oob&grant_type=authorization_code" $google_url_get_tokens`
+    
     refresh_token=`echo $json_back | grep "refresh_token" |cut -d ":" -f2 | sed "s/.$//" | sed "s/^.//" | sed 's/"//g'`
     if [ "$refresh_token" == "" ]; then
     	echo "Failure during token request, here the response:"
@@ -57,7 +58,6 @@ function upload () {
 	filesize=`stat -f%z $filepath`
 	mimetype=`file --mime-type $filepath | cut -d":" -f2 | sed "s/^ //"`
     title=`basename "$filepath"`
-
 
 	postData="{\"mimeType\": \"$mimetype\",\"name\": \"$title\",\"parents\": [{\"kind\": \"drive#file\",\"id\": \"root\"}]}"
 	postDataSize=$(echo $postData | wc -c)
