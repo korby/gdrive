@@ -4,8 +4,8 @@
 # author		 : Korby (https://github.com/korby)
 # date 	         : feb. 2018 
 
-client_id="182658329119-08oe7dp5b88ds4k12sdj9m1islqna26o.apps.googleusercontent.com"
-client_secret="gc0YM8gPvXUfd1G-im8kssgo"
+client_id=""
+client_secret=""
 tokens_path="/tmp/"$client_id
 google_url_console="https://console.developers.google.com/apis/"
 google_url_get_code="https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=$client_id"
@@ -25,13 +25,13 @@ if [ ! -f $tokens_path ]; then
     read -p "Type the code:" code
 	json_back=`curl -H 'Content-Type: application/x-www-form-urlencoded' -d "code=$code&client_id=$client_id&client_secret=$client_secret&redirect_uri=urn:ietf:wg:oauth:2.0:oob&grant_type=authorization_code" $google_url_get_tokens`
     
-    refresh_token=`echo $json_back | grep "refresh_token" |cut -d ":" -f2 | sed "s/.$//" | sed "s/^.//" | sed 's/"//g'`
+    refresh_token=`echo "$json_back" | grep "refresh_token" |cut -d ":" -f2 | sed "s/.$//" | sed "s/^.//" | sed 's/"//g'`
     if [ "$refresh_token" == "" ]; then
     	echo "Failure during token request, here the response:"
     	echo $json_back
     	exit 1
     fi
-    echo "$refresh_token" > $tokens_path;
+    echo "$refresh_token:" > $tokens_path;
 fi
 
 function get_access_token () {
@@ -45,7 +45,6 @@ function get_access_token () {
 		refresh_token=`cat $tokens_path | cut -d ':' -f1`;
 		json_back=`curl -d "client_id=$client_id&client_secret=$client_secret&refresh_token=$refresh_token&grant_type=refresh_token" $google_url_get_tokens`;
 		access_token=`echo "$json_back" | grep "access_token" |cut -d ":" -f2 | sed "s/.$//" | sed "s/^.//" | sed 's/"//g'`
-		echo "$json_back" > /tmp/test.txt
 		sed -i $sed_compat"s/:.*$/:$access_token/g" $tokens_path
 	fi
 	
@@ -55,6 +54,7 @@ function get_access_token () {
 function upload () {
 	access_token=$1
 	filepath=$2
+
 	filesize=`stat -f%z $filepath`
 	mimetype=`file --mime-type $filepath | cut -d":" -f2 | sed "s/^ //"`
     title=`basename "$filepath"`
@@ -73,6 +73,7 @@ function upload () {
 				--dump-header - `
 
 	refloc=`echo "$ref" | grep location | sed "s/location: //" | tr -d '\r\n'`
+	echo $refloc > ./gdrive.log
 	curl -X PUT --dump-header - -H "Authorization: Bearer "$access_token -H "Content-Type: "$mimetype -H "Content-Length: "$filesize -H "Slug: "$title --upload-file $filepath $refloc
 
 }
