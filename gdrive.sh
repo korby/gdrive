@@ -55,7 +55,7 @@ function upload () {
 	access_token=$1
 	filepath=$2
 
-	filesize=`stat -f%z $filepath`
+	filesize=`ls -nl $filepath | awk '{print $5}'`
 	mimetype=`file --mime-type $filepath | cut -d":" -f2 | sed "s/^ //"`
     title=`basename "$filepath"`
 
