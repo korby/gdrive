@@ -81,7 +81,7 @@ function upload () {
 				"https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable" \
 				--dump-header - `
 
-	refloc=`echo "$ref" | grep location | sed "s/location: //" | tr -d '\r\n'`
+	refloc=`echo "$ref" | grep -i location | sed "s/location: //I" | tr -d '\r\n'`
 	echo $refloc > ./gdrive.log
 	curl -X PUT --dump-header - -H "Authorization: Bearer "$access_token -H "Content-Type: "$mimetype -H "Content-Length: "$filesize -H "Slug: "$title --upload-file $filepath $refloc
 
