@@ -20,7 +20,7 @@ tokens_path=$client_id
 google_url_console="https://console.developers.google.com/apis/"
 google_url_get_code="https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=$client_id"
 google_url_get_tokens="https://accounts.google.com/o/oauth2/token"
-
+if [ -f "./parent_dir"]; then . ./parent_dir; fi
 
 if [ "$client_id" == "" ]; then echo "Need client_id, you can get it here: "; echo $google_url_console; exit 1; fi
 if [ "$client_secret" == "" ]; then echo "Need client_secret, you can get it here: "; echo $google_url_console; exit 1; fi
@@ -68,7 +68,15 @@ function upload () {
 	mimetype=`file --mime-type $filepath | cut -d":" -f2 | sed "s/^ //"`
     title=`basename "$filepath"`
 
-	postData="{\"mimeType\": \"$mimetype\",\"name\": \"$title\",\"parents\": [{\"kind\": \"drive#file\",\"id\": \"root\"}]}"
+  # If parent_dir_id is set, upload go in
+  if [ "$parent_dir_id" != "" ]; then
+	  postData="{\"parents\": [\"$parent_dir_id\"],\"mimeType\": \"$mimetype\",\"name\": \"$title\"}"
+  else
+  # upload go tho the gdrive root dir
+    postData="{\"mimeType\": \"$mimetype\",\"name\": \"$title\",\"parents\": [{\"kind\": \"drive#file\",\"id\": \"root\"}]}"
+  fi
+  
+ 
 	postDataSize=$(echo $postData | wc -c)
 	ref=`curl --silent \
 				-X POST \
@@ -81,9 +89,9 @@ function upload () {
 				"https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable" \
 				--dump-header - `
 
-	refloc=`echo "$ref" | grep -i location | sed "s/location: //I" | tr -d '\r\n'`
+	refloc=`echo "$ref" | grep -i location | perl -p -e 's/location: //gi' | tr -d '\r\n'`
 	echo $refloc > ./gdrive.log
-	curl -X PUT --dump-header - -H "Authorization: Bearer "$access_token -H "Content-Type: "$mimetype -H "Content-Length: "$filesize -H "Slug: "$title --upload-file $filepath $refloc
+	curl -X PUT --dump-header - -H "Authorization: Bearer "$access_token -H "Content-Type: "$mimetype -H "Content-Length: "$filesize --upload-file $filepath $refloc
 
 }
 access_token=`get_access_token`;
@@ -92,7 +100,7 @@ while getopts "lu:" opt; do
     case "$opt" in
     l)
         echo "Listing drives root files...";
-		    curl -H "GData-Version: 3.0" -H "Authorization: Bearer $access_token" https://www.googleapis.com/drive/v2/files
+		    curl -s -H "GData-Version: 3.0" -H "Authorization: Bearer $access_token" https://www.googleapis.com/drive/v2/files
         exit 0
         ;;
     u)
