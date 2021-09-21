@@ -14,8 +14,8 @@ then
   done < /dev/stdin
 fi
 
-client_id="$(cat client_id.txt)"
-client_secret="$(cat client_secret.txt)"
+client_id="$(cat client_id.txt 2>/dev/null)"
+client_secret="$(cat client_secret.txt 2>/dev/null)"
 tokens_path=$client_id  
 google_url_console="https://console.developers.google.com/apis/"
 google_url_get_code="https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=$client_id"
@@ -23,8 +23,8 @@ google_url_get_tokens="https://accounts.google.com/o/oauth2/token"
 
 if [ -f "./parent_dir" ]; then . ./parent_dir; fi
 
-if [ "$client_id" == "" ]; then echo "Need client_id, you can get it here: "; echo $google_url_console; exit 1; fi
-if [ "$client_secret" == "" ]; then echo "Need client_secret, you can get it here: "; echo $google_url_console; exit 1; fi
+if [ "$client_id" == "" ]; then echo "Need client_id, you can get it here: "; echo "$google_url_console/credentials"; exit 1; fi
+if [ "$client_secret" == "" ]; then echo "Need client_secret, you can get it here: "; echo "$google_url_console/credentials"; exit 1; fi
 if [ ! -f $tokens_path ] && [ "$access_token" = "" ]; then
 	echo "Need a code to get token, please get it here: "
 	echo $google_url_get_code
